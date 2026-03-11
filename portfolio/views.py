@@ -10,8 +10,8 @@ from portfolio.services.coinmarketcap import CoinMarketCapService
 
 from .services.portfolio import PortfolioService
 from rest_framework.exceptions import ValidationError
-from portfolio.models import Asset, Transaction
-from portfolio.serializers import AssetSerializer, TransactionSerializer
+from portfolio.models import Asset, PortfolioAlerts, Transaction
+from portfolio.serializers import AssetSerializer, PortfolioAlertsSerializer, PortfolioAlertsUpdateSerializer, TransactionSerializer
     
 # Create your views here.
 class AssetViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -97,3 +97,19 @@ class TopMarketCapView(APIView):
             "limit": limit,
             "results": coins
         })
+    
+
+class PortfolioAlertsViewSet(viewsets.ModelViewSet):
+    serializer_class = PortfolioAlertsSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return PortfolioAlerts.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def get_serializer_class(self):
+        if self.action in ['update', 'partial_update']:
+            return PortfolioAlertsUpdateSerializer
+        return PortfolioAlertsSerializer
