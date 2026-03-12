@@ -49,7 +49,14 @@ class SummaryView(APIView):
         assets_data = []
 
         for asset in assets:
-            current_price = Decimal(str(BinanceService.get_price(asset.symbol)))
+            try:
+                current_price = Decimal(str(BinanceService.get_price(asset.symbol)))
+            except ValueError as e:
+                return Response(
+                    {"error": f"Failed to fetch price for {asset.symbol}: {str(e)}"},
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE
+                )
+            
             invested = asset.amount * asset.avg_price
             current_value = asset.amount * current_price
             pnl = current_value - invested
@@ -89,7 +96,7 @@ class TopMarketCapView(APIView):
         
         try:
             coins = CoinMarketCapService.get_top_coins(limit=limit, page=page)
-        except Exception as e:
+        except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         
         return Response({
