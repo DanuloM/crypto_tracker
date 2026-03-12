@@ -1,4 +1,15 @@
 services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
   web:
     build: .
     ports:
@@ -6,6 +17,7 @@ services:
     env_file:
       - .env
     depends_on:
+      - db
       - redis
   
   celery:
@@ -14,6 +26,7 @@ services:
     env_file:
       - .env
     depends_on:
+      - db
       - redis
 
   celery-beat:
@@ -22,9 +35,13 @@ services:
     env_file:
       - .env
     depends_on:
+      - db
       - redis
 
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+
+volumes:
+  postgres_data:
